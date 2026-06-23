@@ -1,0 +1,23 @@
+dcc:
+  active: "maya"
+  maya:
+    host: "localhost"
+    port: 7002
+    source_type: "python"
+    timeout: 10
+
+ai:
+  active: "ollama"
+  ollama:
+    host: "https://localhost:11434"
+    model_analyze: "qwen2.5-coder:7b"
+
+api:
+  host: "0.0.0.0"
+  port: 8000
+  reload: true
+
+
+logging:
+  level: "INFO"
+  file: "logs/neuropipe.log"
