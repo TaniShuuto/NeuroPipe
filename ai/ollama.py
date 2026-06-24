@@ -6,7 +6,17 @@ class OllamaBackend(AIBackend):
         self.model = model
 
     def analyze(self,text:str,context:str) -> str:
-        pass
+        prompt = f"以下のMayaエラーを分析して解決策を提案してください\n{text}"
+        if context:
+            prompt += f"\n補足情報:{context}"
+        url = self.host + "/api/generate"
+        payload = {
+            "model":self.model,
+            "prompt":prompt,
+            "stream":False
+        }
+        response = requests.post(url,json=payload)
+        return response.json()["response"]
     def generate_code(self, prompt:str,language:str) -> str:
         pass
     def is_available(self) -> bool:
