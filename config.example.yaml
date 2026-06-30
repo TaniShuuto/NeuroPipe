@@ -20,4 +20,4 @@ api:
 
 logging:
   level: "INFO"
-  file: "logs/neuropipe.log"
+  file: "logs/neuropipe.logs"
