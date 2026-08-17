@@ -1,3 +1,4 @@
+import json
 import socket
 
 from adapters.base import DCCAdapter
@@ -11,15 +12,24 @@ class MayaAdapter(DCCAdapter):
         self.host = host
         self.port = port
         self.timeout = timeout
+        self.sock = None
     def connect(self):
-        sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-        sock.settimeout(self.timeout)
+        self.sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+        self.sock.settimeout(self.timeout)
         try:
-            sock.connect((self.host,self.port))
+            self.sock.connect((self.host,self.port))
         except OSError as e:
             raise DCCConnectionError("Mayaとの接続に失敗しました。")
     def execute(self,code:str)->dict[str,Any]:
-        pass
+        self.sock.sendall(code.encode())
+        chunks=[]
+        while True:
+            chunk = self.sock.recv(4096)
+            if not chunk:
+                break
+            chunks.append(chunk)
+        response = b''.join(chunks).decode()
+        return {"response":response}
     def get_scene_info(self):
         pass
     def get_logs(self,lines:int=100)->list[str]:
