@@ -6,7 +6,8 @@ class OllamaBackend(AIBackend):
         self.model = model
 
     def analyze(self,text:str,context:str) -> str:
-        prompt = f"以下のMayaエラーを分析して解決策を提案してください\n{text}"
+        prompt = (f"以下のエラーを分析して解決策を提案してください."
+                  f"補足情報がある場合、そちらの指示を優先してください.\n{text}")
         if context:
             prompt += f"\n補足情報:{context}"
         url = self.host + "/api/generate"
