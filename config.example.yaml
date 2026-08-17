@@ -9,7 +9,7 @@ dcc:
 ai:
   active: "ollama"
   ollama:
-    host: "https://localhost:11434"
+    host: "http://localhost:11434"
     model_analyze: "qwen2.5-coder:7b"
 
 api:
