@@ -1,5 +1,8 @@
-from ai.base import AIBackend
 import requests
+
+from ai.base import AIBackend
+
+
 class OllamaBackend(AIBackend):
     def __init__(self,host:str,model:str):
         self.host = host
