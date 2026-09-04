@@ -1,10 +1,11 @@
 import json
 import socket
+import textwrap
 
 from adapters.base import DCCAdapter
 from typing import Any
 
-from core.exceptions import DCCConnectionError
+from core.exceptions import DCCConnectionError, DCCExecutionError
 
 
 class MayaAdapter(DCCAdapter):
@@ -21,7 +22,8 @@ class MayaAdapter(DCCAdapter):
         except OSError as e:
             raise DCCConnectionError("Mayaとの接続に失敗しました。")
     def execute(self,code:str)->dict[str,Any]:
-        self.sock.sendall(code.encode())
+        wrapped = self._wrap_code(code)
+        self.sock.sendall(wrapped.encode())
         chunks=[]
         while True:
             chunk = self.sock.recv(4096)
@@ -29,8 +31,21 @@ class MayaAdapter(DCCAdapter):
                 break
             chunks.append(chunk)
         response = b''.join(chunks).decode()
-        return {"response":response}
+        result = json.loads(response)
+        if result.get("status") == "error":
+            raise DCCExecutionError(result.get("message", ""))
+        return result
     def get_scene_info(self):
         pass
     def get_logs(self,lines:int=100)->list[str]:
         pass
+    def _wrap_code(self,code:str)->str:
+        indented = textwrap.indent(code,"    ")
+        return (
+            "import json\n"
+            "try:\n"
+            f"{indented}\n"
+            "    print(json.dumps({\"status\":\"ok\"}))\n"
+            "except Exception as e:\n"
+            "    print(json.dumps({\"status\":\"error\",\"message\":str(e)}))\n"
+        )
