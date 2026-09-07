@@ -31,7 +31,13 @@ class MayaAdapter(DCCAdapter):
                 break
             chunks.append(chunk)
         response = b''.join(chunks).decode()
-        result = json.loads(response)
+        try:
+            response = json.loads(response)
+        except json.decoder.JSONDecodeError as e:
+            raise DCCExecutionError("JSONDecodeError")
+        if "status" not in response:
+            raise DCCExecutionError("Mayaからの応答が不正です")
+        result = response
         if result.get("status") == "error":
             raise DCCExecutionError(result.get("message", ""))
         return result
