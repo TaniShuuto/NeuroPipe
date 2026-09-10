@@ -2,9 +2,12 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from ai.ollama import OllamaBackend
 from core.config import load_config
+from adapters.maya import MayaAdapter
 class AnalyzeRequest(BaseModel):
     text: str
     context:str = ""
+class ExecuteRequest(BaseModel):
+    code:str
 
 
 app = FastAPI()
@@ -22,3 +25,13 @@ def analyze(request: AnalyzeRequest):
     )
     return ollama.analyze(request.text, request.context)
 
+@app.post("/execute")
+def execute(request: ExecuteRequest):
+    config = load_config()
+    maya =MayaAdapter(
+        host=config["dcc"]["maya"]["host"],
+        port=config["dcc"]["maya"]["port"],
+        timeout=config["dcc"]["maya"]["timeout"]
+    )
+    maya.connect()
+    return maya.execute(request.code)
