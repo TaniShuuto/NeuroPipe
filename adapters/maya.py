@@ -1,7 +1,7 @@
 import json
 import socket
 import textwrap
-
+import uuid
 from adapters.base import DCCAdapter
 from typing import Any
 
@@ -22,15 +22,32 @@ class MayaAdapter(DCCAdapter):
         except OSError as e:
             raise DCCConnectionError("Mayaとの接続に失敗しました。")
     def execute(self,code:str)->dict[str,Any]:
-        wrapped = self._wrap_code(code)
-        self.sock.sendall(wrapped.encode())
+        self.execute_id = "maya_id_" + uuid.uuid4().hex
+        wrapped = self._wrap_code_store(code)
+        fetch_code = self._wrap_code_fetch()
+        wrapped = self._to_mel(wrapped)
+        fetch_code = self._to_mel(fetch_code)
+        print("wrapped length:", len(wrapped))
+        print("fetch_code length:", len(fetch_code))
+        self.sock.sendall((wrapped+"\n").encode())#改行を含まないとTimeOut
         chunks=[]
         while True:
             chunk = self.sock.recv(4096)
-            if not chunk:
-                break
+            print(repr(chunk))
             chunks.append(chunk)
+            if b"\n" in chunk:
+                break
+        self.connect()
+        self.sock.sendall(fetch_code.encode())#改行を含むとTimeOut
+        chunks=[]
+        while True:
+            chunk = self.sock.recv(4096)
+            print(repr(chunk))
+            chunks.append(chunk)
+            if b"\n" in chunk:
+                break
         response = b''.join(chunks).decode()
+        response = response.strip("\n\x00")
         try:
             response = json.loads(response)
         except json.decoder.JSONDecodeError as e:
@@ -45,13 +62,23 @@ class MayaAdapter(DCCAdapter):
         pass
     def get_logs(self,lines:int=100)->list[str]:
         pass
-    def _wrap_code(self,code:str)->str:
+    def _wrap_code_store(self,code:str)->str:
         indented = textwrap.indent(code,"    ")
+
         return (
             "import json\n"
             "try:\n"
             f"{indented}\n"
-            "    print(json.dumps({\"status\":\"ok\"}))\n"
-            "except Exception as e:\n"
-            "    print(json.dumps({\"status\":\"error\",\"message\":str(e)}))\n"
+            f"    {self.execute_id} = (json.dumps({{\"status\":\"ok\"}}))\n"
+            f"    print({self.execute_id})\n"
+            "except Exception as e:\n"  
+            f"    {self.execute_id} = (json.dumps({{\"status\":\"error\",\"message\":str(e)}}))\n"
+            f"    print({self.execute_id})\n"
         )
+    def _wrap_code_fetch(self)->str:
+        return self.execute_id
+
+    def _to_mel(self,python_code:str)->str:
+        mel = python_code.replace('"','\\"')
+        mel = mel.replace('\n','\\n')
+        return f'python("{mel}")'
