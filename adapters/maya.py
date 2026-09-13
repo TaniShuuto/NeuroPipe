@@ -82,3 +82,5 @@ class MayaAdapter(DCCAdapter):
         mel = python_code.replace('"','\\"')
         mel = mel.replace('\n','\\n')
         return f'python("{mel}")'
+    def get_dcc_type(self) -> str:
+        return "maya"
