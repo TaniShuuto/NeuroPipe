@@ -11,3 +11,9 @@ class AIConnectionError(AIError):
     pass
 class AIGenerateError(AIError):
     pass
+class ToolError(Exception):
+    pass
+class ToolConnectionError(ToolError):
+    pass
+class ToolExecutionError(ToolError):
+    pass
