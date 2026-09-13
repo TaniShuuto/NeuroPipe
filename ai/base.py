@@ -4,7 +4,7 @@ class AIBackend(ABC):
     def analyze(self,text:str,context:str) -> str:
         pass
     @abstractmethod
-    def generate_code(self, prompt:str,language:str) -> str:
+    def generate_code(self, language:str,dcc:str,prompt:str) -> str:
         pass
     @abstractmethod
     def is_available(self) -> bool:
