@@ -15,4 +15,6 @@ class DCCAdapter(ABC):
     @abstractmethod
     def get_logs(self,lines:int=100)->list[str]:
         pass
-
+    @abstractmethod
+    def get_dcc_type(self) -> str:
+        pass
