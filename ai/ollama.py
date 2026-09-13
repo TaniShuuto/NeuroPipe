@@ -1,7 +1,7 @@
 import requests
-
+import json
 from ai.base import AIBackend
-
+from core.exceptions import AIConnectionError,AIGenerateError
 
 class OllamaBackend(AIBackend):
     def __init__(self,host:str,model:str):
@@ -21,11 +21,37 @@ class OllamaBackend(AIBackend):
         }
         response = requests.post(url,json=payload)
         return response.json()["response"]
-    def generate_code(self, prompt:str,language:str) -> str:
-        pass
+    def generate_code(self,language:str,dcc:str,prompt:str) -> str:
+        prompt = (f"指定言語:{language}\n{dcc}で実行できるコードを生成してください."
+                  f"以下の条件を達成してください.\n{prompt}")
+
+        payload = {
+            "model":self.model,
+            "prompt":prompt,
+            "stream":False,
+            "format":{
+                "type":"object",
+                "properties":{
+                    "code":{"type":"string"},
+                },
+                "required":["code"]
+            }
+        }
+        url = self.host + "/api/generate"
+        response = requests.post(url,json=payload)
+        response = response.json()["response"]
+        try:
+            response = json.loads(response)
+        except json.decoder.JSONDecodeError as e:
+            raise AIGenerateError("JSONDecodeError")
+        try:
+            code = response["code"]
+            return code
+        except  KeyError:
+            raise AIGenerateError("Ollamaからの返答が不正です")
     def is_available(self) -> bool:
         try:
             available = requests.get(self.host)
             return available.status_code == 200
-        except Exception:
+        except Exception :
             return False
