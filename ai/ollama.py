@@ -1,5 +1,8 @@
 import requests
 import json
+
+from requests import RequestException
+
 from ai.base import AIBackend
 from core.exceptions import AIConnectionError,AIGenerateError
 
@@ -19,8 +22,17 @@ class OllamaBackend(AIBackend):
             "prompt":prompt,
             "stream":False
         }
-        response = requests.post(url,json=payload)
-        return response.json()["response"]
+        try:
+            response = requests.post(url,json=payload)
+        except RequestException as e:
+            raise AIConnectionError(str(e))
+        try:
+            response = response.json()["response"]
+        except json.decoder.JSONDecodeError:
+            raise AIGenerateError("JSONDecodeError")
+        except KeyError as e :
+            raise AIGenerateError(f"Ollamaからの返答が不正です{str(e)}")
+        return response
     def generate_code(self,language:str,dcc:str,prompt:str) -> str:
         prompt = (f"指定言語:{language}\n{dcc}で実行できるコードを生成してください."
                   f"以下の条件を達成してください.\n{prompt}")
@@ -38,8 +50,16 @@ class OllamaBackend(AIBackend):
             }
         }
         url = self.host + "/api/generate"
-        response = requests.post(url,json=payload)
-        response = response.json()["response"]
+        try:
+            response = requests.post(url,json=payload)
+        except RequestException as e:
+            raise AIConnectionError(str(e))
+        try:
+            response = response.json()["response"]
+        except json.decoder.JSONDecodeError:
+            raise AIGenerateError("Ollamaからの応答が不正です.")
+        except KeyError as e :
+            raise AIGenerateError(f"Ollamaからの応答が不正です.{str(e)}")
         try:
             response = json.loads(response)
         except json.decoder.JSONDecodeError as e:
@@ -47,8 +67,8 @@ class OllamaBackend(AIBackend):
         try:
             code = response["code"]
             return code
-        except  KeyError:
-            raise AIGenerateError("Ollamaからの返答が不正です")
+        except  KeyError as e :
+            raise AIGenerateError(f"Ollamaからの返答が不正です{str(e)}")
     def is_available(self) -> bool:
         try:
             available = requests.get(self.host)
