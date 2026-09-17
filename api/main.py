@@ -1,8 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI,HTTPException
+from fastapi.exceptions import FastAPIError
 from pydantic import BaseModel
 from ai.ollama import OllamaBackend
 from core.config import load_config
 from adapters.maya import MayaAdapter
+from core.exceptions import DCCConnectionError, AIGenerateError, AIConnectionError
 from core.loop import loop
 class AnalyzeRequest(BaseModel):
     text: str
@@ -28,7 +30,11 @@ def analyze(request: AnalyzeRequest):
         host=config["ai"]["ollama"]["host"],
         model=config["ai"]["ollama"]["model_analyze"],
     )
-    return ollama.analyze(request.text, request.context)
+    try:
+        result = ollama.analyze(request.text,request.context)
+    except AIConnectionError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    return result
 
 @app.post("/execute")
 def execute(request: ExecuteRequest):
@@ -53,5 +59,12 @@ def run_loop(request: LoopRequest):
         host=config["ai"]["ollama"]["host"],
         model=config["ai"]["ollama"]["model_analyze"],
     )
-    loop_status = loop(request.prompt, maya, ollama, request.language, request.loop_count)
+    try:
+        loop_status = loop(request.prompt, maya, ollama, request.language, request.loop_count)
+    except AIGenerateError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    except DCCConnectionError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except AIConnectionError as e:
+        raise HTTPException(status_code=503, detail=str(e))
     return loop_status
