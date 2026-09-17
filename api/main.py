@@ -32,6 +32,8 @@ def analyze(request: AnalyzeRequest):
     )
     try:
         result = ollama.analyze(request.text,request.context)
+    except AIGenerateError as e:
+        raise HTTPException(status_code=502, detail=str(e))
     except AIConnectionError as e:
         raise HTTPException(status_code=503, detail=str(e))
     return result
