@@ -5,6 +5,8 @@ class DCCConnectionError(DCCAdapterError):
     pass
 class DCCExecutionError(DCCAdapterError):
     pass
+class DCCSyntaxError(DCCExecutionError):
+    pass
 class AIError(Exception):
     pass
 class AIConnectionError(AIError):
