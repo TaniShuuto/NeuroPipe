@@ -5,7 +5,7 @@ import uuid
 from adapters.base import DCCAdapter
 from typing import Any
 
-from core.exceptions import DCCConnectionError, DCCExecutionError
+from core.exceptions import DCCConnectionError, DCCExecutionError,DCCSyntaxError
 
 
 class MayaAdapter(DCCAdapter):
@@ -22,6 +22,10 @@ class MayaAdapter(DCCAdapter):
         except OSError as e:
             raise DCCConnectionError("Mayaとの接続に失敗しました。")
     def execute(self,code:str)->dict[str,Any]:
+        try:
+            compile(code,"<string>","exec")
+        except SyntaxError as e:
+            raise DCCSyntaxError(str(e))
         self.execute_id = "maya_id_" + uuid.uuid4().hex
         wrapped = self._wrap_code_store(code)
         fetch_code = self._wrap_code_fetch()
