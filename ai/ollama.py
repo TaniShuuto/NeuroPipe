@@ -11,11 +11,17 @@ class OllamaBackend(AIBackend):
         self.host = host
         self.model = model
 
-    def analyze(self,text:str,context:str) -> str:
-        prompt = (f"以下のエラーを分析して解決策を提案してください."
-                  f"補足情報がある場合、そちらの指示を優先してください.\n{text}")
+    def analyze(self,text:str,context:str,scene_info:str) -> str:
+        if scene_info:
+            prompt = (f"以下のシーンで発生したエラーを分析して解決策を提案してください.\n"
+            f"シーン情報:{scene_info}\n"
+            f"エラー内容:{text}")
+        else:
+            prompt = (f"以下のエラーを分析して解決策を提案してください."
+                    f"補足情報がある場合、そちらの指示を優先してください.\n{text}")
         if context:
             prompt += f"\n補足情報:{context}"
+        print(prompt)
         url = self.host + "/api/generate"
         payload = {
             "model":self.model,
