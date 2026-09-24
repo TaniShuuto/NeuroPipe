@@ -17,3 +17,14 @@ plugins/generated/
 .DS_Store
 .Thumbs.db
 .idea/
+mayatest.py
+mayatest2.py
+Claude outputs/ARCHITECTURE_template.md
+Claude outputs/NeuroPipe_Issues_v20_差分.md
+Claude outputs/README_v2.md
+NeuroPipe_Issues_v12_差分.md
+nul
+test.py
+.vscode/extensions.json
+.vscode/launch.json
+adapters/memo
