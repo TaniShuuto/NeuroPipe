@@ -30,10 +30,9 @@ class MayaAdapter(DCCAdapter):
 
         if "status" not in response:
             raise DCCExecutionError("Mayaからの応答が不正です")
-        result = response
-        if result.get("status") == "error":
-            raise DCCExecutionError(result.get("message", ""))
-        return result
+        if response.get("status") == "error":
+            raise DCCExecutionError(response.get("message", ""))
+        return response
     def get_scene_info(self):
         code = """
 import maya.cmds as cmds
@@ -113,7 +112,15 @@ else:
     info["other"] = "選択なし"
         """
         response = self.send_protocol(code,"{\"status\":\"ok\",\"data\":str(info)}")
-        return response
+        if "status" not in response:
+            raise DCCExecutionError("Mayaからの応答が不正です")
+        if response.get("status") == "error":
+            raise DCCExecutionError(response.get("message", ""))
+        try:
+            data =  response['data']
+        except KeyError :
+            raise DCCExecutionError("Mayaからの応答が不正です.データが取り出せませんでした")
+        return data
 
     def get_logs(self,lines:int=100)->list[str]:
         pass
