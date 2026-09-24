@@ -4,11 +4,12 @@ from pydantic import BaseModel
 from ai.ollama import OllamaBackend
 from core.config import load_config
 from adapters.maya import MayaAdapter
-from core.exceptions import DCCConnectionError, AIGenerateError, AIConnectionError
+from core.exceptions import DCCConnectionError, AIGenerateError, AIConnectionError, DCCExecutionError
 from core.loop import loop
 class AnalyzeRequest(BaseModel):
     text: str
     context:str = ""
+    include_scene_info:bool = False
 class ExecuteRequest(BaseModel):
     code:str
 class LoopRequest(BaseModel):
@@ -30,12 +31,27 @@ def analyze(request: AnalyzeRequest):
         host=config["ai"]["ollama"]["host"],
         model=config["ai"]["ollama"]["model_analyze"],
     )
+
     try:
-        result = ollama.analyze(request.text,request.context)
+        if request.include_scene_info:
+            maya =MayaAdapter(
+                host=config["dcc"]["maya"]["host"],
+                port=config["dcc"]["maya"]["port"],
+                timeout=config["dcc"]["maya"]["timeout"]
+            )
+            maya.connect()
+            scene_info = maya.get_scene_info()
+        else:
+            scene_info = ""
+        result = ollama.analyze(request.text,request.context,scene_info)
     except AIGenerateError as e:
         raise HTTPException(status_code=502, detail=str(e))
     except AIConnectionError as e:
         raise HTTPException(status_code=503, detail=str(e))
+    except DCCExecutionError as e:
+        raise HTTPException(status_code=502, detail= str(e))
+    except DCCConnectionError as e:
+        raise HTTPException(status_code=503, detail= str(e))
     return result
 
 @app.post("/execute")
