@@ -4,16 +4,17 @@ import textwrap
 import uuid
 from adapters.base import DCCAdapter
 from typing import Any
-
+from collections import deque
 from core.exceptions import DCCConnectionError, DCCExecutionError,DCCSyntaxError
 
 
 class MayaAdapter(DCCAdapter):
-    def __init__(self,host:str,port:int,timeout:int):
+    def __init__(self,host:str,port:int,timeout:int,log_path:str):
         self.host = host
         self.port = port
         self.timeout = timeout
         self.sock = None
+        self.log_path = log_path
     def connect(self):
         self.sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.sock.settimeout(self.timeout)
@@ -123,7 +124,15 @@ else:
         return data
 
     def get_logs(self,lines:int=100)->list[str]:
-        pass
+        try:
+            with open(self.log_path,"r",encoding="cp932") as f:
+                maya_logs = deque(f,maxlen=lines)
+        except UnicodeDecodeError as e:
+            raise DCCExecutionError("Unicodeに変換できませんでした.\n"+str(e))
+        except OSError as e:
+            raise DCCExecutionError("Fileが正常に取り込めませんでした.\n"+str(e))
+        result = [logs.strip("\n") for logs in maya_logs ]
+        return result
     def _wrap_code_store(self,code:str,result:str = "{\"status\":\"ok\"}")->str:
         indented = textwrap.indent(code,"    ")
 
