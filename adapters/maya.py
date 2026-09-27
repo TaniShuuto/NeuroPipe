@@ -173,6 +173,8 @@ else:
         response = response.strip("\n\x00")
         try:
             response = json.loads(response)
+            print("/n")
+            print(repr(response))
         except json.decoder.JSONDecodeError as e:
             raise DCCExecutionError("JSONDecodeError")
         return response
