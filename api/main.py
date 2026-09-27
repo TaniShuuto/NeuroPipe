@@ -37,7 +37,8 @@ def analyze(request: AnalyzeRequest):
             maya =MayaAdapter(
                 host=config["dcc"]["maya"]["host"],
                 port=config["dcc"]["maya"]["port"],
-                timeout=config["dcc"]["maya"]["timeout"]
+                timeout=config["dcc"]["maya"]["timeout"],
+                log_path=config["dcc"]["maya"]["log_path"]    
             )
             maya.connect()
             scene_info = maya.get_scene_info()
@@ -60,9 +61,12 @@ def execute(request: ExecuteRequest):
     maya =MayaAdapter(
         host=config["dcc"]["maya"]["host"],
         port=config["dcc"]["maya"]["port"],
-        timeout=config["dcc"]["maya"]["timeout"]
+        timeout=config["dcc"]["maya"]["timeout"],
+        log_path=config["dcc"]["maya"]["log_path"]
     )
     maya.connect()
+    logs = maya.get_logs()
+    print("logです"+str(logs))
     return maya.execute(request.code)
 
 @app.post("/loop")
@@ -71,7 +75,8 @@ def run_loop(request: LoopRequest):
     maya =MayaAdapter(
         host=config["dcc"]["maya"]["host"],
         port=config["dcc"]["maya"]["port"],
-        timeout=config["dcc"]["maya"]["timeout"]
+        timeout=config["dcc"]["maya"]["timeout"],
+        log_path=config["dcc"]["maya"]["log_path"]
     )
     ollama = OllamaBackend(
         host=config["ai"]["ollama"]["host"],
