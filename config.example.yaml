@@ -5,6 +5,7 @@ dcc:
     port: 7002
     source_type: "python"
     timeout: 10
+    log_path: ""    
 
 ai:
   active: "ollama"
