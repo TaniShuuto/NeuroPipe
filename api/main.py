@@ -64,10 +64,14 @@ def execute(request: ExecuteRequest):
         timeout=config["dcc"]["maya"]["timeout"],
         log_path=config["dcc"]["maya"]["log_path"]
     )
-    maya.connect()
-    logs = maya.get_logs()
-    print("logです"+str(logs))
-    return maya.execute(request.code)
+    try:
+        maya.connect()
+        result =  maya.execute(request.code)
+    except DCCConnectionError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except DCCExecutionError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    return result
 
 @app.post("/loop")
 def run_loop(request: LoopRequest):
