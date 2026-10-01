@@ -9,6 +9,6 @@ def load_config():
         raise FileNotFoundError(
             "config.yaml doesn't exist in current directory"
         )
-    with open(config_path) as f:
+    with open(config_path,encoding="utf-8") as f:
         config = yaml.safe_load(f)
         return config
