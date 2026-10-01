@@ -5,13 +5,14 @@ dcc:
     port: 7002
     source_type: "python"
     timeout: 10
-    log_path: ""    
+    log_path: "C:/Users/<ユーザー名>/Documents/Maya/Maya_NeuroPipe.log"    
 
 ai:
   active: "ollama"
   ollama:
     host: "http://localhost:11434"
     model_analyze: "qwen2.5-coder:7b"
+  trycount: 10    
 
 api:
   host: "0.0.0.0"
